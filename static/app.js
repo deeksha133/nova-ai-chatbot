@@ -1,0 +1,9 @@
+const messages=document.querySelector('#messages'),form=document.querySelector('#chatForm'),input=document.querySelector('#input'),send=document.querySelector('#send');
+const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function bubble(role,text){document.querySelector('.welcome')?.remove();const row=document.createElement('div');row.className=`message ${role}`;row.innerHTML=`<div class="avatar">${role==='user'?'You':'✦'}</div><div class="bubble">${esc(text).replace(/\n/g,'<br>')}</div>`;messages.append(row);messages.scrollTop=messages.scrollHeight;return row}
+async function load(){const r=await fetch('/api/history');(await r.json()).forEach(m=>bubble(m.role,m.content))}load();
+form.addEventListener('submit',async e=>{e.preventDefault();const text=input.value.trim();if(!text)return;bubble('user',text);input.value='';send.disabled=true;const typing=bubble('assistant','Nova is typing...');typing.classList.add('typing');try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});const d=await r.json();typing.remove();bubble('assistant',d.response||d.error)}catch{typing.remove();bubble('assistant','Connection error. Please try again.')}finally{send.disabled=false;input.focus()}});
+document.querySelectorAll('.suggestions button').forEach(b=>b.onclick=()=>{input.value=b.textContent;input.focus()});
+async function clear(){await fetch('/api/history',{method:'DELETE'});location.reload()}document.querySelector('#clear').onclick=clear;document.querySelector('#newChat').onclick=clear;
+document.querySelector('#theme').onclick=()=>{document.body.classList.toggle('light');localStorage.setItem('theme',document.body.className)};document.body.className=localStorage.getItem('theme')||'';
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
