@@ -21,6 +21,12 @@ def init_db():
     db().execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, role TEXT NOT NULL, content TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
     db().commit()
 
+
+# Initialize SQLite when Gunicorn imports the application on Render.
+with app.app_context():
+    init_db()
+
+
 @app.get('/')
 def index(): return render_template('index.html')
 
